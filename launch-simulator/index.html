@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Interplanetary Launch Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-primary: #0a0e14;
+      --bg-secondary: #131921;
+      --bg-tertiary: #1a222d;
+      --text-primary: #e6edf3;
+      --text-secondary: #8b949e;
+      --accent-warm: #f6f1e1;
+      --accent-orange: #f0883e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-red: #f85149;
+      --border-color: #30363d;
+    }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    header a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    header a:hover {
+      color: var(--accent-warm);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-top: 0.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-top: 0.25rem;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      min-height: calc(100vh - 100px);
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Control Panel */
+    .controls {
+      background: var(--bg-secondary);
+      padding: 1.5rem;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .control-group label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+
+    select, input[type="range"] {
+      width: 100%;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      color: var(--text-primary);
+      font-family: inherit;
+    }
+
+    select {
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      height: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--accent-warm);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid var(--bg-primary);
+    }
+
+    .date-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--accent-warm);
+      text-align: center;
+      padding: 0.5rem;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      margin-top: 0.25rem;
+    }
+
+    .launch-btn {
+      background: linear-gradient(135deg, var(--accent-orange), #d97706);
+      color: var(--bg-primary);
+      border: none;
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .launch-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(240, 136, 62, 0.3);
+    }
+
+    .launch-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Results Panel */
+    .results {
+      background: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-top: auto;
+    }
+
+    .results h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 0.5rem 0;
+    }
+
+    .result-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .result-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--text-primary);
+    }
+
+    .result-value.highlight {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .score-excellent { color: var(--accent-green); }
+    .score-good { color: var(--accent-blue); }
+    .score-fair { color: var(--accent-orange); }
+    .score-poor { color: var(--accent-red); }
+
+    /* Simulation Area */
+    .simulation {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    #canvas {
+      border-radius: 12px;
+      background: radial-gradient(ellipse at center, #0f1419 0%, #0a0e14 100%);
+    }
+
+    .sim-info {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      background: rgba(19, 25, 33, 0.9);
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .sim-info .status {
+      color: var(--accent-green);
+      margin-bottom: 0.5rem;
+    }
+
+    .sim-info .elapsed {
+      color: var(--text-secondary);
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .legend-dot.earth { background: #4a90d9; }
+    .legend-dot.target { background: #d97706; }
+    .legend-dot.spacecraft { background: var(--accent-warm); }
+
+    /* Score Gauge */
+    .score-gauge {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+    }
+
+    .gauge-bar {
+      height: 8px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease-out, background 0.5s;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="/">← Home</a>
+    <h1>Interplanetary Launch Simulator</h1>
+    <p class="subtitle">Calculate optimal transfer windows and mission costs</p>
+  </header>
+
+  <div class="container">
+    <aside class="controls">
+      <div class="control-group">
+        <label>Launch Date</label>
+        <input type="range" id="dateSlider" min="0" max="10950" value="0" />
+        <div class="date-display" id="dateDisplay">Jan 31, 2025</div>
+      </div>
+
+      <div class="control-group">
+        <label>Destination</label>
+        <select id="planetSelect">
+          <option value="mars">Mars</option>
+          <option value="venus">Venus</option>
+          <option value="jupiter">Jupiter</option>
+          <option value="saturn">Saturn</option>
+          <option value="uranus">Uranus</option>
+          <option value="neptune">Neptune</option>
+          <option value="pluto">Pluto</option>
+          <option value="mercury">Mercury</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Launch Vehicle</label>
+        <select id="rocketSelect">
+          <option value="falcon9">Falcon 9</option>
+          <option value="falconHeavy">Falcon Heavy</option>
+          <option value="starship">Starship</option>
+          <option value="sls">SLS Block 1</option>
+          <option value="newGlenn">New Glenn</option>
+        </select>
+      </div>
+
+      <button class="launch-btn" id="launchBtn">Launch Mission</button>
+
+      <div class="results" id="results">
+        <h3>Mission Parameters</h3>
+        <div class="result-row">
+          <span class="result-label">Transfer Time</span>
+          <span class="result-value" id="transferTime">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Delta-v Required</span>
+          <span class="result-value" id="deltaV">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Fuel Mass</span>
+          <span class="result-value" id="fuelMass">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Launch Cost</span>
+          <span class="result-value" id="launchCost">—</span>
+        </div>
+        <div class="score-gauge">
+          <div class="result-row">
+            <span class="result-label">Efficiency Score</span>
+            <span class="result-value highlight" id="efficiencyScore">—</span>
+          </div>
+          <div class="gauge-bar">
+            <div class="gauge-fill" id="gaugeFill" style="width: 0%; background: var(--accent-red);"></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="simulation">
+      <canvas id="canvas" width="700" height="700"></canvas>
+      <div class="sim-info" id="simInfo" style="display: none;">
+        <div class="status" id="simStatus">In Transit</div>
+        <div class="elapsed" id="simElapsed">Day 0 of mission</div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot earth"></span> Earth</div>
+        <div class="legend-item"><span class="legend-dot target"></span> Target Planet</div>
+        <div class="legend-item"><span class="legend-dot spacecraft"></span> Spacecraft</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ==========================================
+    // ORBITAL MECHANICS DATA & CONSTANTS
+    // ==========================================
+    
+    const AU = 149597870.7; // km
+    const G = 6.674e-11; // gravitational constant
+    const M_SUN = 1.989e30; // kg
+    const MU_SUN = 1.327e11; // km³/s² (standard gravitational parameter)
+    
+    // Planet data: semi-major axis (AU), orbital period (days), color, visual radius
+    const PLANETS = {
+      mercury: { name: 'Mercury', a: 0.387, period: 88, color: '#8c8c8c', radius: 3 },
+      venus: { name: 'Venus', a: 0.723, period: 225, color: '#e6c87a', radius: 5 },
+      earth: { name: 'Earth', a: 1.0, period: 365.25, color: '#4a90d9', radius: 6 },
+      mars: { name: 'Mars', a: 1.524, period: 687, color: '#c75b3a', radius: 4 },
+      jupiter: { name: 'Jupiter', a: 5.203, period: 4333, color: '#d4a574', radius: 16 },
+      saturn: { name: 'Saturn', a: 9.537, period: 10759, color: '#e8dcc4', radius: 13 },
+      uranus: { name: 'Uranus', a: 19.19, period: 30687, color: '#7de3f4', radius: 9 },
+      neptune: { name: 'Neptune', a: 30.07, period: 60190, color: '#4f6df5', radius: 9 },
+      pluto: { name: 'Pluto', a: 39.48, period: 90560, color: '#c9b8a5', radius: 2 }
+    };
+    
+    // Rocket data: payload to LEO (kg), cost per kg ($), Isp (s)
+    const ROCKETS = {
+      falcon9: { name: 'Falcon 9', payloadLEO: 22800, costPerKg: 2720, isp: 311 },
+      falconHeavy: { name: 'Falcon Heavy', payloadLEO: 63800, costPerKg: 1500, isp: 311 },
+      starship: { name: 'Starship', payloadLEO: 150000, costPerKg: 200, isp: 380 },
+      sls: { name: 'SLS Block 1', payloadLEO: 95000, costPerKg: 23000, isp: 366 },
+      newGlenn: { name: 'New Glenn', payloadLEO: 45000, costPerKg: 2000, isp: 320 }
+    };
+    
+    // Reference epoch: J2000 (Jan 1, 2000)
+    // Approximate mean longitude at J2000 (degrees)
+    const MEAN_LONGITUDE_J2000 = {
+      mercury: 252.25,
+      venus: 181.98,
+      earth: 100.46,
+      mars: 355.45,
+      jupiter: 34.40,
+      saturn: 50.08,
+      uranus: 314.05,
+      neptune: 304.88,
+      pluto: 238.92
+    };
+
+    // ==========================================
+    // STATE MANAGEMENT
+    // ==========================================
+    
+    const state = {
+      launchDate: new Date(),
+      targetPlanet: 'mars',
+      rocket: 'falcon9',
+      isSimulating: false,
+      simulationProgress: 0,
+      missionData: null
+    };
+    
+    const baseDate = new Date('2025-01-31');
+
+    // ==========================================
+    // ORBITAL MECHANICS CALCULATIONS
+    // ==========================================
+    
+    function getPlanetPosition(planet, date) {
+      // Days since J2000
+      const j2000 = new Date('2000-01-01T12:00:00Z');
+      const daysSinceJ2000 = (date - j2000) / (1000 * 60 * 60 * 24);
+      
+      // Mean anomaly (simplified circular orbit)
+      const meanMotion = 360 / PLANETS[planet].period; // degrees per day
+      const meanLongitude = MEAN_LONGITUDE_J2000[planet] + meanMotion * daysSinceJ2000;
+      const angle = (meanLongitude % 360) * Math.PI / 180;
+      
+      return {
+        x: PLANETS[planet].a * Math.cos(angle),
+        y: PLANETS[planet].a * Math.sin(angle),
+        angle: angle
+      };
+    }
+    
+    function calculateHohmannTransfer(r1, r2) {
+      // r1, r2 in AU
+      const r1_km = r1 * AU;
+      const r2_km = r2 * AU;
+      
+      // Semi-major axis of transfer orbit
+      const a_transfer = (r1_km + r2_km) / 2;
+      
+      // Transfer time (half the period of the transfer ellipse)
+      const transferTime = Math.PI * Math.sqrt(Math.pow(a_transfer, 3) / MU_SUN); // seconds
+      const transferDays = transferTime / (60 * 60 * 24);
+      
+      // Velocities
+      const v1_circular = Math.sqrt(MU_SUN / r1_km); // circular velocity at r1
+      const v2_circular = Math.sqrt(MU_SUN / r2_km); // circular velocity at r2
+      
+      // Transfer orbit velocities at perihelion and aphelion
+      const v_transfer_peri = Math.sqrt(MU_SUN * (2/r1_km - 1/a_transfer));
+      const v_transfer_apo = Math.sqrt(MU_SUN * (2/r2_km - 1/a_transfer));
+      
+      // Delta-v calculations
+      let dv1, dv2;
+      if (r2 > r1) {
+        // Going outward
+        dv1 = Math.abs(v_transfer_peri - v1_circular);
+        dv2 = Math.abs(v2_circular - v_transfer_apo);
+      } else {
+        // Going inward
+        dv1 = Math.abs(v1_circular - v_transfer_peri);
+        dv2 = Math.abs(v_transfer_apo - v2_circular);
+      }
+      
+      const totalDeltaV = dv1 + dv2;
+      
+      return {
+        transferDays,
+        deltaV: totalDeltaV, // km/s
+        semiMajorAxis: a_transfer
+      };
+    }
+    
+    function calculatePhaseAngle(targetPlanet, launchDate) {
+      // Calculate required phase angle for Hohmann transfer
+      const earthData = PLANETS.earth;
+      const targetData = PLANETS[targetPlanet];
+      
+      // Transfer time
+      const transfer = calculateHohmannTransfer(earthData.a, targetData.a);
+      
+      // Angle target planet travels during transfer
+      const targetAngularVelocity = 360 / targetData.period; // degrees per day
+      const targetTravel = targetAngularVelocity * transfer.transferDays;
+      
+      // Required phase angle (target ahead of Earth)
+      let requiredPhase;
+      if (targetData.a > earthData.a) {
+        // Outer planet: target should be ahead
+        requiredPhase = 180 - targetTravel;
+      } else {
+        // Inner planet: target should be behind
+        requiredPhase = 180 + targetTravel;
+      }
+      
+      // Normalize to -180 to 180
+      while (requiredPhase > 180) requiredPhase -= 360;
+      while (requiredPhase < -180) requiredPhase += 360;
+      
+      // Current phase angle
+      const earthPos = getPlanetPosition('earth', launchDate);
+      const targetPos = getPlanetPosition(targetPlanet, launchDate);
+      
+      let currentPhase = (targetPos.angle - earthPos.angle) * 180 / Math.PI;
+      while (currentPhase > 180) currentPhase -= 360;
+      while (currentPhase < -180) currentPhase += 360;
+      
+      // Phase angle error (how far from optimal)
+      let phaseError = Math.abs(currentPhase - requiredPhase);
+      if (phaseError > 180) phaseError = 360 - phaseError;
+      
+      return {
+        current: currentPhase,
+        required: requiredPhase,
+        error: phaseError
+      };
+    }
+    
+    function calculateEfficiencyScore(phaseError) {
+      // 0 degrees error = 100 score
+      // 180 degrees error = 0 score
+      // Using cosine for smooth falloff
+      const score = Math.round(100 * Math.cos(phaseError * Math.PI / 180));
+      return Math.max(0, score);
+    }
+    
+    function calculateMissionCost(deltaV, rocket) {
+      const rocketData = ROCKETS[rocket];
+      
+      // Using Tsiolkovsky rocket equation to estimate fuel mass
+      // Assuming a 5000 kg payload spacecraft
+      const payloadMass = 5000; // kg
+      const g0 = 9.81; // m/s²
+      const ve = rocketData.isp * g0; // exhaust velocity m/s
+      const deltaV_ms = deltaV * 1000; // convert km/s to m/s
+      
+      // Mass ratio
+      const massRatio = Math.exp(deltaV_ms / ve);
+      const totalMass = payloadMass * massRatio;
+      const fuelMass = totalMass - payloadMass;
+      
+      // Launch cost (simplified: based on total mass to LEO)
+      const launchMass = Math.min(totalMass, rocketData.payloadLEO);
+      const launchCost = launchMass * rocketData.costPerKg;
+      
+      return {
+        fuelMass: Math.round(fuelMass),
+        launchCost: Math.round(launchCost),
+        feasible: totalMass <= rocketData.payloadLEO * 2 // rough feasibility check
+      };
+    }
+
+    // ==========================================
+    // UI UPDATES
+    // ==========================================
+    
+    function updateDateDisplay() {
+      const slider = document.getElementById('dateSlider');
+      const daysOffset = parseInt(slider.value);
+      state.launchDate = new Date(baseDate.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+      
+      const options = { year: 'numeric', month: 'short', day: 'numeric' };
+      document.getElementById('dateDisplay').textContent = 
+        state.launchDate.toLocaleDateString('en-AU', options);
+      
+      drawOrbits();
+    }
+    
+    function updateResults(missionData) {
+      document.getElementById('transferTime').textContent = 
+        `${Math.round(missionData.transferDays)} days`;
+      
+      document.getElementById('deltaV').textContent = 
+        `${missionData.deltaV.toFixed(2)} km/s`;
+      
+      document.getElementById('fuelMass').textContent = 
+        `${missionData.fuelMass.toLocaleString()} kg`;
+      
+      document.getElementById('launchCost').textContent = 
+        `$${(missionData.launchCost / 1e6).toFixed(1)}M`;
+      
+      const scoreEl = document.getElementById('efficiencyScore');
+      scoreEl.textContent = missionData.score;
+      
+      // Color based on score
+      scoreEl.className = 'result-value highlight';
+      if (missionData.score >= 80) scoreEl.classList.add('score-excellent');
+      else if (missionData.score >= 60) scoreEl.classList.add('score-good');
+      else if (missionData.score >= 40) scoreEl.classList.add('score-fair');
+      else scoreEl.classList.add('score-poor');
+      
+      // Update gauge
+      const gaugeFill = document.getElementById('gaugeFill');
+      gaugeFill.style.width = `${missionData.score}%`;
+      if (missionData.score >= 80) gaugeFill.style.background = 'var(--accent-green)';
+      else if (missionData.score >= 60) gaugeFill.style.background = 'var(--accent-blue)';
+      else if (missionData.score >= 40) gaugeFill.style.background = 'var(--accent-orange)';
+      else gaugeFill.style.background = 'var(--accent-red)';
+    }
+
+    // ==========================================
+    // CANVAS RENDERING
+    // ==========================================
+    
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    
+    function auToPixels(au) {
+      // Use logarithmic scaling for aesthetically even spacing
+      // This makes inner planets visible while fitting outer planets
+      const maxPixels = Math.min(canvas.width, canvas.height) / 2 - 30;
+      const minAU = 0.3;
+      const maxAU = 45;
+      
+      // Logarithmic scale with adjustment for visual appeal
+      const logMin = Math.log(minAU);
+      const logMax = Math.log(maxAU);
+      const logAU = Math.log(Math.max(au, minAU));
+      
+      const normalized = (logAU - logMin) / (logMax - logMin);
+      return normalized * maxPixels + 25; // minimum 25px from center
+    }
+    
+    function drawOrbits() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw subtle starfield
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      for (let i = 0; i < 80; i++) {
+        const x = (Math.sin(i * 127.1) * 0.5 + 0.5) * canvas.width;
+        const y = (Math.cos(i * 311.7) * 0.5 + 0.5) * canvas.height;
+        const size = (Math.sin(i * 71.3) * 0.5 + 0.5) * 1.5 + 0.5;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      
+      // Draw Sun
+      const sunGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 18);
+      sunGradient.addColorStop(0, '#ffffff');
+      sunGradient.addColorStop(0.2, '#fff7e0');
+      sunGradient.addColorStop(0.5, '#ffcc00');
+      sunGradient.addColorStop(0.8, '#ff9500');
+      sunGradient.addColorStop(1, '#ff6600');
+      ctx.fillStyle = sunGradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 14, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Sun corona
+      const coronaGradient = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, 50);
+      coronaGradient.addColorStop(0, 'rgba(255, 200, 50, 0.4)');
+      coronaGradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.1)');
+      coronaGradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
+      ctx.fillStyle = coronaGradient;
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+      ctx.fill();
+      
+      const target = state.targetPlanet;
+      const allPlanets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+      
+      allPlanets.forEach(planet => {
+        const data = PLANETS[planet];
+        const orbitRadius = auToPixels(data.a);
+        
+        // Orbit path
+        const isTarget = planet === target;
+        const isEarth = planet === 'earth';
+        ctx.strokeStyle = isTarget ? 'rgba(217, 119, 6, 0.4)' : 
+                          isEarth ? 'rgba(74, 144, 217, 0.3)' : 
+                          'rgba(100, 120, 140, 0.15)';
+        ctx.lineWidth = isTarget ? 2 : 1;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Planet position
+        const pos = getPlanetPosition(planet, state.launchDate);
+        const px = centerX + orbitRadius * Math.cos(pos.angle);
+        const py = centerY - orbitRadius * Math.sin(pos.angle);
+        
+        // Draw planet based on type
+        drawPlanet(ctx, px, py, planet, data, isTarget || isEarth);
+      });
+    }
+    
+    function drawPlanet(ctx, x, y, planet, data, showLabel) {
+      const r = data.radius;
+      
+      // Planet-specific rendering
+      switch(planet) {
+        case 'jupiter':
+          drawJupiter(ctx, x, y, r);
+          break;
+        case 'saturn':
+          drawSaturn(ctx, x, y, r);
+          break;
+        case 'earth':
+          drawEarth(ctx, x, y, r);
+          break;
+        case 'mars':
+          drawMars(ctx, x, y, r);
+          break;
+        case 'uranus':
+          drawUranus(ctx, x, y, r);
+          break;
+        case 'neptune':
+          drawNeptune(ctx, x, y, r);
+          break;
+        default:
+          drawGenericPlanet(ctx, x, y, r, data.color);
+      }
+      
+      // Label
+      if (showLabel) {
+        ctx.fillStyle = 'rgba(230, 237, 243, 0.85)';
+        ctx.font = '10px JetBrains Mono';
+        const labelOffset = planet === 'saturn' ? r + 18 : r + 6;
+        ctx.fillText(data.name, x + labelOffset, y + 3);
+      }
+    }
+    
+    function drawGenericPlanet(ctx, x, y, r, color) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+      glow.addColorStop(0, color + '40');
+      glow.addColorStop(1, color + '00');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Body
+      const bodyGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      bodyGrad.addColorStop(0, lightenColor(color, 30));
+      bodyGrad.addColorStop(1, color);
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    function drawEarth(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2.5);
+      glow.addColorStop(0, 'rgba(74, 144, 217, 0.4)');
+      glow.addColorStop(1, 'rgba(74, 144, 217, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2.5, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Ocean base
+      const oceanGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      oceanGrad.addColorStop(0, '#6eb5ff');
+      oceanGrad.addColorStop(1, '#2d6cb5');
+      ctx.fillStyle = oceanGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Land masses (simplified)
+      ctx.fillStyle = 'rgba(76, 140, 76, 0.7)';
+      ctx.beginPath();
+      ctx.arc(x - r * 0.2, y - r * 0.1, r * 0.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + r * 0.3, y + r * 0.2, r * 0.25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    function drawMars(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+      glow.addColorStop(0, 'rgba(199, 91, 58, 0.35)');
+      glow.addColorStop(1, 'rgba(199, 91, 58, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Body
+      const marsGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      marsGrad.addColorStop(0, '#e07850');
+      marsGrad.addColorStop(0.7, '#c75b3a');
+      marsGrad.addColorStop(1, '#8b3a20');
+      ctx.fillStyle = marsGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Polar cap
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.beginPath();
+      ctx.arc(x, y - r * 0.7, r * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    function drawJupiter(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 1.8);
+      glow.addColorStop(0, 'rgba(212, 165, 116, 0.3)');
+      glow.addColorStop(1, 'rgba(212, 165, 116, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Base
+      const jupiterGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      jupiterGrad.addColorStop(0, '#f0d8b8');
+      jupiterGrad.addColorStop(0.5, '#d4a574');
+      jupiterGrad.addColorStop(1, '#a67c52');
+      ctx.fillStyle = jupiterGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Bands
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.clip();
+      
+      const bandColors = ['rgba(180, 130, 90, 0.4)', 'rgba(210, 170, 130, 0.3)', 'rgba(160, 110, 70, 0.4)'];
+      const bandPositions = [-0.6, -0.2, 0.3, 0.7];
+      bandPositions.forEach((pos, i) => {
+        ctx.fillStyle = bandColors[i % bandColors.length];
+        ctx.fillRect(x - r, y + pos * r - r * 0.15, r * 2, r * 0.25);
+      });
+      
+      // Great Red Spot
+      ctx.fillStyle = 'rgba(180, 80, 60, 0.8)';
+      ctx.beginPath();
+      ctx.ellipse(x + r * 0.3, y + r * 0.25, r * 0.25, r * 0.15, 0, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+    }
+    
+    function drawSaturn(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+      glow.addColorStop(0, 'rgba(232, 220, 196, 0.25)');
+      glow.addColorStop(1, 'rgba(232, 220, 196, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Rings (back half)
+      ctx.strokeStyle = 'rgba(200, 180, 150, 0.6)';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 2, r * 0.5, 0, Math.PI, Math.PI * 2);
+      ctx.stroke();
+      
+      ctx.strokeStyle = 'rgba(180, 160, 130, 0.4)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 1.7, r * 0.4, 0, Math.PI, Math.PI * 2);
+      ctx.stroke();
+      
+      // Body
+      const saturnGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      saturnGrad.addColorStop(0, '#f5edd8');
+      saturnGrad.addColorStop(0.5, '#e8dcc4');
+      saturnGrad.addColorStop(1, '#c4b496');
+      ctx.fillStyle = saturnGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Subtle bands
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.fillStyle = 'rgba(180, 160, 130, 0.2)';
+      ctx.fillRect(x - r, y - r * 0.3, r * 2, r * 0.2);
+      ctx.fillRect(x - r, y + r * 0.2, r * 2, r * 0.15);
+      ctx.restore();
+      
+      // Rings (front half)
+      ctx.strokeStyle = 'rgba(210, 195, 170, 0.7)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 2, r * 0.5, 0, 0, Math.PI);
+      ctx.stroke();
+      
+      ctx.strokeStyle = 'rgba(190, 175, 150, 0.5)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 1.7, r * 0.4, 0, 0, Math.PI);
+      ctx.stroke();
+      
+      ctx.strokeStyle = 'rgba(170, 155, 130, 0.3)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 2.2, r * 0.55, 0, 0, Math.PI);
+      ctx.stroke();
+    }
+    
+    function drawUranus(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+      glow.addColorStop(0, 'rgba(125, 227, 244, 0.3)');
+      glow.addColorStop(1, 'rgba(125, 227, 244, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Body
+      const uranusGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      uranusGrad.addColorStop(0, '#a8f0f8');
+      uranusGrad.addColorStop(0.5, '#7de3f4');
+      uranusGrad.addColorStop(1, '#4db8c7');
+      ctx.fillStyle = uranusGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Faint ring (vertical - Uranus is tilted)
+      ctx.strokeStyle = 'rgba(150, 200, 210, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 0.3, r * 1.5, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    
+    function drawNeptune(ctx, x, y, r) {
+      // Glow
+      const glow = ctx.createRadialGradient(x, y, 0, x, y, r * 2);
+      glow.addColorStop(0, 'rgba(79, 109, 245, 0.35)');
+      glow.addColorStop(1, 'rgba(79, 109, 245, 0)');
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Body
+      const neptuneGrad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, 0, x, y, r);
+      neptuneGrad.addColorStop(0, '#7090ff');
+      neptuneGrad.addColorStop(0.5, '#4f6df5');
+      neptuneGrad.addColorStop(1, '#3050c0');
+      ctx.fillStyle = neptuneGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Dark spot
+      ctx.fillStyle = 'rgba(40, 60, 120, 0.5)';
+      ctx.beginPath();
+      ctx.ellipse(x - r * 0.2, y - r * 0.1, r * 0.3, r * 0.2, -0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    function lightenColor(hex, percent) {
+      const num = parseInt(hex.replace('#', ''), 16);
+      const amt = Math.round(2.55 * percent);
+      const R = Math.min(255, (num >> 16) + amt);
+      const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+      const B = Math.min(255, (num & 0x0000FF) + amt);
+      return `rgb(${R},${G},${B})`;
+    }
+    
+    let animationId = null;
+    let simStartTime = null;
+    
+    function runSimulation() {
+      if (state.isSimulating) return;
+      
+      state.isSimulating = true;
+      document.getElementById('launchBtn').disabled = true;
+      document.getElementById('simInfo').style.display = 'block';
+      
+      const target = state.targetPlanet;
+      const rocket = state.rocket;
+      
+      // Calculate mission parameters
+      const transfer = calculateHohmannTransfer(PLANETS.earth.a, PLANETS[target].a);
+      const phase = calculatePhaseAngle(target, state.launchDate);
+      const score = calculateEfficiencyScore(phase.error);
+      const cost = calculateMissionCost(transfer.deltaV, rocket);
+      
+      state.missionData = {
+        ...transfer,
+        ...cost,
+        score,
+        phaseError: phase.error
+      };
+      
+      updateResults(state.missionData);
+      
+      // Store launch parameters
+      const launchDate = new Date(state.launchDate);
+      const transferDays = transfer.transferDays;
+      const arrivalDate = new Date(launchDate.getTime() + transferDays * 24 * 60 * 60 * 1000);
+      
+      // Get Earth position at launch and target position at arrival
+      const earthAtLaunch = getPlanetPosition('earth', launchDate);
+      const targetAtArrival = getPlanetPosition(target, arrivalDate);
+      
+      const isOuterPlanet = PLANETS[target].a > PLANETS.earth.a;
+      
+      // Calculate the transfer trajectory that intercepts the target
+      const earthOrbitRadius = auToPixels(PLANETS.earth.a);
+      const targetOrbitRadius = auToPixels(PLANETS[target].a);
+      
+      // Launch and arrival positions in pixels
+      const launchX = centerX + earthOrbitRadius * Math.cos(earthAtLaunch.angle);
+      const launchY = centerY - earthOrbitRadius * Math.sin(earthAtLaunch.angle);
+      const arrivalX = centerX + targetOrbitRadius * Math.cos(targetAtArrival.angle);
+      const arrivalY = centerY - targetOrbitRadius * Math.sin(targetAtArrival.angle);
+      
+      // Animation: max 8 seconds regardless of transfer time
+      const animDuration = 8000;
+      simStartTime = Date.now();
+      
+      function animate() {
+        const elapsed = Date.now() - simStartTime;
+        const progress = Math.min(elapsed / animDuration, 1);
+        
+        // Calculate current mission day and date
+        const missionDay = progress * transferDays;
+        const currentDate = new Date(launchDate.getTime() + missionDay * 24 * 60 * 60 * 1000);
+        
+        // Clear and draw background
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw starfield
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        for (let i = 0; i < 80; i++) {
+          const x = (Math.sin(i * 127.1) * 0.5 + 0.5) * canvas.width;
+          const y = (Math.cos(i * 311.7) * 0.5 + 0.5) * canvas.height;
+          const size = (Math.sin(i * 71.3) * 0.5 + 0.5) * 1.5 + 0.5;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        // Draw Sun
+        const sunGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 18);
+        sunGradient.addColorStop(0, '#ffffff');
+        sunGradient.addColorStop(0.2, '#fff7e0');
+        sunGradient.addColorStop(0.5, '#ffcc00');
+        sunGradient.addColorStop(0.8, '#ff9500');
+        sunGradient.addColorStop(1, '#ff6600');
+        ctx.fillStyle = sunGradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 14, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Sun corona
+        const coronaGradient = ctx.createRadialGradient(centerX, centerY, 12, centerX, centerY, 50);
+        coronaGradient.addColorStop(0, 'rgba(255, 200, 50, 0.4)');
+        coronaGradient.addColorStop(0.5, 'rgba(255, 150, 50, 0.1)');
+        coronaGradient.addColorStop(1, 'rgba(255, 100, 50, 0)');
+        ctx.fillStyle = coronaGradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, 50, 0, Math.PI * 2);
+        ctx.fill();
+        
+        const allPlanets = ['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'];
+        
+        // Draw orbits and planets at CURRENT simulated date
+        allPlanets.forEach(planet => {
+          const data = PLANETS[planet];
+          const orbitRadius = auToPixels(data.a);
+          
+          // Orbit path
+          const isTarget = planet === target;
+          const isEarth = planet === 'earth';
+          ctx.strokeStyle = isTarget ? 'rgba(217, 119, 6, 0.4)' : 
+                            isEarth ? 'rgba(74, 144, 217, 0.3)' : 
+                            'rgba(100, 120, 140, 0.15)';
+          ctx.lineWidth = isTarget ? 2 : 1;
+          ctx.beginPath();
+          ctx.arc(centerX, centerY, orbitRadius, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          // Planet position at current simulated date
+          const pos = getPlanetPosition(planet, currentDate);
+          const px = centerX + orbitRadius * Math.cos(pos.angle);
+          const py = centerY - orbitRadius * Math.sin(pos.angle);
+          
+          drawPlanet(ctx, px, py, planet, data, isTarget || isEarth);
+        });
+        
+        // Draw transfer trajectory as an elliptical arc from launch to arrival
+        // The arc curves away from sun (outer planets) or toward sun (inner planets)
+        ctx.strokeStyle = 'rgba(246, 241, 225, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 4]);
+        
+        // Calculate control point for quadratic bezier that creates proper curvature
+        // The curve should bow outward (away from sun) for outer planets
+        // and inward (toward sun) for inner planets
+        
+        // Midpoint between launch and arrival
+        const midX = (launchX + arrivalX) / 2;
+        const midY = (launchY + arrivalY) / 2;
+        
+        // Vector from sun to midpoint
+        const toMidX = midX - centerX;
+        const toMidY = midY - centerY;
+        const midDist = Math.sqrt(toMidX * toMidX + toMidY * toMidY);
+        
+        // Normalize and scale to create control point
+        // For outer planets: push control point outward (away from sun)
+        // For inner planets: pull control point inward (toward sun)
+        const curvature = isOuterPlanet ? 0.4 : -0.3;
+        const avgOrbitRadius = (earthOrbitRadius + targetOrbitRadius) / 2;
+        const controlDist = avgOrbitRadius * (1 + curvature);
+        
+        const cpX = centerX + (toMidX / midDist) * controlDist;
+        const cpY = centerY + (toMidY / midDist) * controlDist;
+        
+        // Draw the trajectory curve
+        ctx.beginPath();
+        ctx.moveTo(launchX, launchY);
+        ctx.quadraticCurveTo(cpX, cpY, arrivalX, arrivalY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Spacecraft position along the bezier curve
+        const t = progress;
+        const scX = (1-t)*(1-t)*launchX + 2*(1-t)*t*cpX + t*t*arrivalX;
+        const scY = (1-t)*(1-t)*launchY + 2*(1-t)*t*cpY + t*t*arrivalY;
+        
+        // Spacecraft trail
+        ctx.strokeStyle = 'rgba(246, 241, 225, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        let trailStarted = false;
+        for (let i = 0; i <= 15; i++) {
+          const trailT = progress - (i / 15) * 0.12;
+          if (trailT < 0) continue;
+          
+          const tx = (1-trailT)*(1-trailT)*launchX + 2*(1-trailT)*trailT*cpX + trailT*trailT*arrivalX;
+          const ty = (1-trailT)*(1-trailT)*launchY + 2*(1-trailT)*trailT*cpY + trailT*trailT*arrivalY;
+          
+          if (!trailStarted) {
+            ctx.moveTo(tx, ty);
+            trailStarted = true;
+          } else {
+            ctx.lineTo(tx, ty);
+          }
+        }
+        ctx.stroke();
+        
+        // Spacecraft glow
+        const scGlow = ctx.createRadialGradient(scX, scY, 0, scX, scY, 18);
+        scGlow.addColorStop(0, 'rgba(246, 241, 225, 0.9)');
+        scGlow.addColorStop(0.5, 'rgba(246, 241, 225, 0.3)');
+        scGlow.addColorStop(1, 'rgba(246, 241, 225, 0)');
+        ctx.fillStyle = scGlow;
+        ctx.beginPath();
+        ctx.arc(scX, scY, 18, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Spacecraft body
+        ctx.fillStyle = '#f6f1e1';
+        ctx.beginPath();
+        ctx.arc(scX, scY, 4, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Update status display
+        const dateStr = currentDate.toLocaleDateString('en-AU', { year: 'numeric', month: 'short', day: 'numeric' });
+        document.getElementById('simElapsed').textContent = `Day ${Math.round(missionDay)} · ${dateStr}`;
+        
+        if (progress < 1) {
+          document.getElementById('simStatus').textContent = 'In Transit';
+          document.getElementById('simStatus').style.color = 'var(--accent-blue)';
+          animationId = requestAnimationFrame(animate);
+        } else {
+          document.getElementById('simStatus').textContent = 'Arrived at ' + PLANETS[target].name;
+          document.getElementById('simStatus').style.color = 'var(--accent-green)';
+          state.isSimulating = false;
+          document.getElementById('launchBtn').disabled = false;
+          
+          // Redraw static view after a moment
+          setTimeout(() => {
+            if (!state.isSimulating) {
+              drawOrbits();
+            }
+          }, 3000);
+        }
+      }
+      
+      animate();
+    }
+
+    // ==========================================
+    // EVENT LISTENERS
+    // ==========================================
+    
+    document.getElementById('dateSlider').addEventListener('input', updateDateDisplay);
+    
+    document.getElementById('planetSelect').addEventListener('change', (e) => {
+      state.targetPlanet = e.target.value;
+      drawOrbits();
+    });
+    
+    document.getElementById('rocketSelect').addEventListener('change', (e) => {
+      state.rocket = e.target.value;
+    });
+    
+    document.getElementById('launchBtn').addEventListener('click', runSimulation);
+    
+    // Initial render
+    updateDateDisplay();
+  </script>
+</body>
+</html>

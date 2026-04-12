@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Hormuz Crisis Dashboard &mdash; LTI-DLF</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f6f1e1;
+      --bg-card: #fbf7e8;
+      --border: #d9cfa8;
+      --border-strong: #c8b98a;
+      --text: #1b1b1b;
+      --muted: #666;
+      --up: #a8352a;
+      --down: #2f6a43;
+      --neutral: #8b7a3a;
+      --highlight: #efe6c4;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 2rem auto;
+      max-width: 1080px;
+      padding: 0 1rem;
+      line-height: 1.55;
+      background: var(--bg);
+      color: var(--text);
+    }
+    h1 { margin-bottom: 0.25rem; font-size: 1.9rem; }
+    h2 {
+      font-size: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-top: 2.5rem;
+      margin-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+    }
+    .dateline {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+    a { color: var(--text); }
+    p.lede {
+      max-width: 780px;
+      margin-bottom: 2rem;
+    }
+
+    /* Shortfall banner */
+    .shortfall-banner {
+      background: var(--highlight);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--up);
+      padding: 1rem 1.2rem;
+      margin: 1.5rem 0 2rem;
+      border-radius: 2px;
+    }
+    .shortfall-banner .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--up);
+      font-weight: 600;
+    }
+    .shortfall-banner .headline {
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-top: 0.2rem;
+    }
+    .shortfall-banner .sub {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+    }
+
+    /* Grid of commodity cards */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .card.biggest {
+      border: 2px solid var(--up);
+      background: var(--highlight);
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+      margin-bottom: 0.6rem;
+    }
+    .card-name {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .card-tag {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    .card-price {
+      font-size: 1.8rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+    .card-price-unit {
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .card-delta {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-top: 0.15rem;
+    }
+    .card-delta.up { color: var(--up); }
+    .card-delta.down { color: var(--down); }
+    .card-delta.flat { color: var(--neutral); }
+    .card-prewar {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      margin-bottom: 0.6rem;
+    }
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+      border-top: 1px dashed var(--border);
+    }
+    .metric-row:first-of-type { border-top: 1px solid var(--border); }
+    .metric-label {
+      color: var(--muted);
+      flex: 0 0 48%;
+    }
+    .metric-value {
+      text-align: right;
+      flex: 1;
+    }
+    .pill {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.45rem;
+      border-radius: 9px;
+      background: var(--border);
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .pill.tight { background: #e8c3b9; color: var(--up); }
+    .pill.ok { background: #c8dfcd; color: var(--down); }
+    .pill.watch { background: #efe6c4; color: var(--neutral); }
+
+    /* Storage snapshot */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 0.45rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--highlight);
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    td.num { text-align: right; font-variant-numeric: tabular-nums; }
+    td.tight { color: var(--up); font-weight: 600; }
+    td.ok { color: var(--down); font-weight: 600; }
+
+    /* Bar chart for supply balance */
+    .bar-row {
+      display: grid;
+      grid-template-columns: 140px 1fr 70px;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+      padding: 0.3rem 0;
+    }
+    .bar-track {
+      position: relative;
+      height: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      background: #b0a263;
+    }
+    .bar-fill.loss {
+      background: var(--up);
+      opacity: 0.85;
+    }
+    .bar-value {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      font-weight: 600;
+    }
+
+    .footnote {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 0.6rem;
+    }
+    .back {
+      margin-top: 3rem;
+      font-size: 0.9rem;
+    }
+    code { background: var(--highlight); padding: 0 0.25rem; border-radius: 3px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <h1>Hormuz Crisis Dashboard</h1>
+  <p class="dateline">Data as of 12 April 2026 &middot; War onset 27 February 2026 &middot; Day 44</p>
+
+  <p class="lede">
+    Snapshot of the real supply, demand, inventory and price picture across
+    crude oil, LNG and the three refined products where the Strait of Hormuz
+    closure is biting hardest. All price deltas are measured against the last
+    pre-war trading day (27 Feb 2026). Figures sourced from EIA, IEA, FOIZ,
+    Enterprise Singapore, Euroilstock, Platts / S&amp;P, IATA and Energy
+    Intelligence.
+  </p>
+
+  <div class="shortfall-banner">
+    <div class="label">Biggest shortfall</div>
+    <div class="headline">Crude oil &mdash; net 7.5 mb/d off the market</div>
+    <div class="sub">
+      ~11 mb/d gross Gulf disruption, partially offset by 3&ndash;4 mb/d
+      pipeline diversion (Petroline, ADCOP) and Hormuz trickle.
+      ~7% of global demand currently unmet, plugged short-term by SPR
+      releases and Asian demand destruction.
+      Jet fuel (+109%) and naphtha (+83%) have the sharpest price moves;
+      crude has the largest absolute barrels-at-stake.
+    </div>
+  </div>
+
+  <h2>Commodities &mdash; Price, Supply, Demand, Inventory</h2>
+
+  <div class="grid">
+
+    <!-- CRUDE OIL -->
+    <div class="card biggest">
+      <div class="card-head">
+        <span class="card-name">Crude Oil (Brent)</span>
+        <span class="card-tag">biggest shortfall</span>
+      </div>
+      <div class="card-price">$100<span class="card-price-unit">/bbl</span></div>
+      <div class="card-delta up">&uarr; +37% since 27 Feb</div>
+      <div class="card-prewar">Pre-war $73 &middot; peak $128 (2 Apr) &middot; Dec-27 strip ~$75</div>
+
+      <div class="metric-row">
+        <span class="metric-label">Pre-war Gulf exports</span>
+        <span class="metric-value">18.1 mb/d</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Reaching market (Apr)</span>
+        <span class="metric-value">~11.6 mb/d</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Net shortfall</span>
+        <span class="metric-value"><span class="pill tight">&minus;7.5 mb/d</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Global demand</span>
+        <span class="metric-value">~103 mb/d (Asia &minus;2)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">US commercial stocks</span>
+        <span class="metric-value">464.7 mb (+3.1 w/w)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">US vs 5-yr avg</span>
+        <span class="metric-value"><span class="pill ok">+2%</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Curve shape</span>
+        <span class="metric-value">Backwardation &gt;$10</span>
+      </div>
+    </div>
+
+    <!-- LNG -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-name">LNG (JKM, Asia)</span>
+        <span class="card-tag">structural</span>
+      </div>
+      <div class="card-price">$18.75<span class="card-price-unit">/MMBtu</span></div>
+      <div class="card-delta up">&uarr; +88% since 27 Feb</div>
+      <div class="card-prewar">Pre-war ~$10 &middot; peak mid-$20s (early Mar) &middot; TTF &euro;50 (+67%)</div>
+
+      <div class="metric-row">
+        <span class="metric-label">Qatar share of global</span>
+        <span class="metric-value">~20%</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ras Laffan capacity lost</span>
+        <span class="metric-value"><span class="pill tight">&minus;17%</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Repair timeline</span>
+        <span class="metric-value">3&ndash;5 years</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">EU gas storage</span>
+        <span class="metric-value">29% full (below avg)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">EU storage injections</span>
+        <span class="metric-value"><span class="pill tight">&minus;77% y/y</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Henry Hub (US)</span>
+        <span class="metric-value">$2.81 (insulated)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Asia LNG demand 2026e</span>
+        <span class="metric-value">+10% y/y</span>
+      </div>
+    </div>
+
+    <!-- JET FUEL -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-name">Jet Fuel (global avg)</span>
+        <span class="card-tag">sharpest price move</span>
+      </div>
+      <div class="card-price">$209<span class="card-price-unit">/bbl</span></div>
+      <div class="card-delta up">&uarr; +109% since 27 Feb</div>
+      <div class="card-prewar">Pre-war ~$100 &middot; +7.1% w/w &middot; IATA monitor</div>
+
+      <div class="metric-row">
+        <span class="metric-label">Global demand</span>
+        <span class="metric-value">~7.5 mb/d</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah mid distillates</span>
+        <span class="metric-value">1.476 mb</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah change</span>
+        <span class="metric-value"><span class="pill tight">&minus;21% w/w</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Singapore middle distillates</span>
+        <span class="metric-value">8.84 mb (drawing)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Airline exposure</span>
+        <span class="metric-value">Asia &gt; EU &gt; US</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Demand response</span>
+        <span class="metric-value">Capacity cuts starting</span>
+      </div>
+    </div>
+
+    <!-- NAPHTHA -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-name">Naphtha (C&amp;F Japan)</span>
+        <span class="card-tag">petrochemical feedstock</span>
+      </div>
+      <div class="card-price">$1,100<span class="card-price-unit">/mt</span></div>
+      <div class="card-delta up">&uarr; +83% since 27 Feb</div>
+      <div class="card-prewar">Pre-war $600 &middot; SG spot &gt;$1,000 since 25 Mar</div>
+
+      <div class="metric-row">
+        <span class="metric-label">% transiting Hormuz</span>
+        <span class="metric-value"><span class="pill tight">~70%</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ethylene derivative</span>
+        <span class="metric-value">$1,351/mt (+100%)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Force majeure</span>
+        <span class="metric-value">Formosa Plastics (1 Apr)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Cracker margins</span>
+        <span class="metric-value"><span class="pill tight">Inverted</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Ruwais / Pearl GTL</span>
+        <span class="metric-value">Strike-hit</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Recovery horizon</span>
+        <span class="metric-value">&gt;Q3 2026</span>
+      </div>
+    </div>
+
+    <!-- DIESEL / GASOIL -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-name">Diesel / Gasoil</span>
+        <span class="card-tag">industrial / freight</span>
+      </div>
+      <div class="card-price">$5.80<span class="card-price-unit">/gal US retail</span></div>
+      <div class="card-delta up">&uarr; +55% since 27 Feb</div>
+      <div class="card-prewar">SG retail $2.98/L (diesel&gt;petrol, first time)</div>
+
+      <div class="metric-row">
+        <span class="metric-label">Global demand</span>
+        <span class="metric-value">~27 mb/d</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">ARA indep. gasoil</span>
+        <span class="metric-value">Drawing ~1% w/w</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah heavy distillates</span>
+        <span class="metric-value">4.909 mb</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah change</span>
+        <span class="metric-value"><span class="pill tight">&minus;7.9% w/w, 8-yr low</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Asian exports of fuel oil</span>
+        <span class="metric-value">Collapsed (imports &minus;57%)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Demand destruction</span>
+        <span class="metric-value">Freight rationing</span>
+      </div>
+    </div>
+
+    <!-- GASOLINE -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-name">Gasoline (RBOB)</span>
+        <span class="card-tag">consumer exposure</span>
+      </div>
+      <div class="card-price">$3.05<span class="card-price-unit">/gal wholesale</span></div>
+      <div class="card-delta up">&uarr; +52% since 27 Feb</div>
+      <div class="card-prewar">Pre-war $2.01 &middot; US retail peak $4.30/gal</div>
+
+      <div class="metric-row">
+        <span class="metric-label">Global demand</span>
+        <span class="metric-value">~27 mb/d</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah light distillates</span>
+        <span class="metric-value">6.170 mb</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Fujairah change</span>
+        <span class="metric-value"><span class="pill watch">+0.9% w/w</span></span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">US refinery utilisation</span>
+        <span class="metric-value">92% (low for season)</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Summer demand</span>
+        <span class="metric-value">Driving season ahead</span>
+      </div>
+      <div class="metric-row">
+        <span class="metric-label">Watch</span>
+        <span class="metric-value">Retail &gt;$4.30 triggers political</span>
+      </div>
+    </div>
+
+  </div>
+
+  <h2>Crude Supply Balance &mdash; Gulf Exports (mb/d)</h2>
+  <p class="footnote">
+    Horizontal bars: grey = barrels reaching market in April, red = net
+    loss vs pre-war. Iraq south and Qatar are the hardest hit; Saudi and
+    UAE are mostly diverting rather than losing.
+  </p>
+
+  <div style="margin-top:1rem;">
+
+    <div class="bar-row">
+      <div>Saudi Arabia</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(5.5 / 7.0 * 100%); background:#b0a263;"></div>
+        <div class="bar-fill loss" style="left: calc(5.5 / 7.0 * 100%); width: calc(1.5 / 7.0 * 100%);"></div>
+      </div>
+      <div class="bar-value">5.5 / 7.0</div>
+    </div>
+
+    <div class="bar-row">
+      <div>Iraq (south)</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(0.9 / 3.3 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(0.9 / 3.3 * 100%); width: calc(2.4 / 3.3 * 100%);"></div>
+      </div>
+      <div class="bar-value">0.9 / 3.3</div>
+    </div>
+
+    <div class="bar-row">
+      <div>Iraq (north)</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: 100%;"></div>
+      </div>
+      <div class="bar-value">0.4 / 0.4</div>
+    </div>
+
+    <div class="bar-row">
+      <div>UAE</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(1.6 / 2.8 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(1.6 / 2.8 * 100%); width: calc(1.2 / 2.8 * 100%);"></div>
+      </div>
+      <div class="bar-value">1.6 / 2.8</div>
+    </div>
+
+    <div class="bar-row">
+      <div>Kuwait</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(1.6 / 2.1 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(1.6 / 2.1 * 100%); width: calc(0.5 / 2.1 * 100%);"></div>
+      </div>
+      <div class="bar-value">1.6 / 2.1</div>
+    </div>
+
+    <div class="bar-row">
+      <div>Qatar (crude)</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(0.1 / 0.7 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(0.1 / 0.7 * 100%); width: calc(0.6 / 0.7 * 100%);"></div>
+      </div>
+      <div class="bar-value">0.1 / 0.7</div>
+    </div>
+
+    <div class="bar-row">
+      <div>Iran</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(1.5 / 1.7 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(1.5 / 1.7 * 100%); width: calc(0.2 / 1.7 * 100%);"></div>
+      </div>
+      <div class="bar-value">1.5 / 1.7</div>
+    </div>
+
+    <div class="bar-row" style="font-weight:600; border-top: 1px solid var(--border); margin-top:0.5rem; padding-top:0.5rem;">
+      <div>GULF TOTAL</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width: calc(11.6 / 18.1 * 100%);"></div>
+        <div class="bar-fill loss" style="left: calc(11.6 / 18.1 * 100%); width: calc(6.5 / 18.1 * 100%);"></div>
+      </div>
+      <div class="bar-value">11.6 / 18.1</div>
+    </div>
+  </div>
+
+  <h2>Global Inventories &mdash; Signal Board</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Region / hub</th>
+        <th>Commodity</th>
+        <th>Level</th>
+        <th>Trend</th>
+        <th>vs normal</th>
+        <th>Signal</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>US (EIA)</td>
+        <td>Commercial crude</td>
+        <td class="num">464.7 mb</td>
+        <td class="num">+3.1 mb w/w</td>
+        <td>+2% vs 5-yr</td>
+        <td class="ok">HOLDING</td>
+      </tr>
+      <tr>
+        <td>US SPR</td>
+        <td>Strategic crude</td>
+        <td class="num">~395 mb</td>
+        <td class="num">Releasing</td>
+        <td>3-decade low</td>
+        <td class="tight">DRAWING</td>
+      </tr>
+      <tr>
+        <td>OECD total</td>
+        <td>Commercial (all)</td>
+        <td class="num">2,824 mb</td>
+        <td class="num">&minus;19.9 mb m/m</td>
+        <td>Above avg</td>
+        <td class="ok">HOLDING</td>
+      </tr>
+      <tr>
+        <td>Global observed</td>
+        <td>All stocks</td>
+        <td class="num">8,210 mb</td>
+        <td class="num">Rising pre-crisis</td>
+        <td>Highest since Feb 2021</td>
+        <td class="ok">FAT BUFFER</td>
+      </tr>
+      <tr>
+        <td>ARA (Europe)</td>
+        <td>Fuel oil (indep.)</td>
+        <td class="num">5.18 mb</td>
+        <td class="num">&minus;20% m/m</td>
+        <td>Record low</td>
+        <td class="tight">TIGHT</td>
+      </tr>
+      <tr>
+        <td>ARA (Europe)</td>
+        <td>Gasoil (diesel)</td>
+        <td class="num">Drawing</td>
+        <td class="num">&minus;1% w/w</td>
+        <td>Below avg</td>
+        <td class="tight">TIGHT</td>
+      </tr>
+      <tr>
+        <td>Singapore</td>
+        <td>Residual fuel oil</td>
+        <td class="num">21.72 mb</td>
+        <td class="num">&minus;9% vs Mar</td>
+        <td>8-month low</td>
+        <td class="tight">TIGHT</td>
+      </tr>
+      <tr>
+        <td>Singapore</td>
+        <td>Middle distillates</td>
+        <td class="num">8.84 mb</td>
+        <td class="num">&minus;560 kb w/w</td>
+        <td>Drawing</td>
+        <td class="tight">TIGHT</td>
+      </tr>
+      <tr>
+        <td>Fujairah</td>
+        <td>Total products</td>
+        <td class="num">12.555 mb</td>
+        <td class="num">&minus;40% since 2 Mar</td>
+        <td>RECORD LOW</td>
+        <td class="tight">CRITICAL</td>
+      </tr>
+      <tr>
+        <td>Fujairah</td>
+        <td>Heavy distillates</td>
+        <td class="num">4.909 mb</td>
+        <td class="num">&minus;7.9% w/w</td>
+        <td>Lowest since 2018</td>
+        <td class="tight">CRITICAL</td>
+      </tr>
+      <tr>
+        <td>Japan (PAJ)</td>
+        <td>Total cover (days)</td>
+        <td class="num">230 days</td>
+        <td class="num">Tapping</td>
+        <td>Highest OECD</td>
+        <td class="ok">ADEQUATE</td>
+      </tr>
+      <tr>
+        <td>Korea (KNOC)</td>
+        <td>Strategic + lease</td>
+        <td class="num">~95 mb</td>
+        <td class="num">Tapping</td>
+        <td>At spec</td>
+        <td class="ok">ADEQUATE</td>
+      </tr>
+      <tr>
+        <td>China</td>
+        <td>Combined (est.)</td>
+        <td class="num">~1,200&ndash;1,300 mb</td>
+        <td class="num">+730 kb/d builds</td>
+        <td>World's largest</td>
+        <td>UNCLEAR (state secret)</td>
+      </tr>
+      <tr>
+        <td>EU gas storage</td>
+        <td>LNG / piped</td>
+        <td class="num">29% full</td>
+        <td class="num">Injections &minus;77% y/y</td>
+        <td>Well below avg</td>
+        <td class="tight">TIGHT</td>
+      </tr>
+      <tr>
+        <td>Global floating</td>
+        <td>Crude on tankers</td>
+        <td class="num">~130&ndash;150 mb</td>
+        <td class="num">Rising fast</td>
+        <td>Near 2022 high</td>
+        <td class="tight">SURGING</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Reading the Board</h2>
+
+  <ul>
+    <li>
+      <strong>Crude is the biggest absolute shortfall</strong> (~7.5 mb/d
+      net, ~7% of global demand) but the best-buffered. US and OECD
+      commercial crude are still above 5-year averages. The SPR release
+      (172 mb US + ~228 mb other IEA over 2026&ndash;27) is doing the
+      heavy lifting.
+    </li>
+    <li>
+      <strong>LNG is the most structural</strong>: Qatar accounts for
+      ~20% of global exports; ~17% of Ras Laffan's capacity is damaged
+      with a 3&ndash;5 year repair window. EU storage is at 29% and
+      injections collapsed 77% y/y. This is not a 2026 problem &mdash;
+      it is a 2027&ndash;2028 problem.
+    </li>
+    <li>
+      <strong>Products are the sharpest price moves</strong>: jet fuel
+      +109%, naphtha +83%, diesel +55%, gasoline +52%. Refineries
+      can't get the right crude to the right place, and the Fujairah /
+      Singapore / ARA data all corroborate.
+    </li>
+    <li>
+      <strong>China is the biggest single unknown</strong>. If they keep
+      stockpiling +730 kb/d, the global shortfall gets worse. If they
+      switch to destocking, it is the largest potential offset in the
+      system.
+    </li>
+    <li>
+      <strong>The earliest tripwire</strong> is Fujairah products. At
+      record lows and declining ~6% per week, they run out in 4&ndash;6
+      weeks on current trajectory. That is the regional bunker /
+      diesel crisis signal, and the first domino if this isn't
+      resolved.
+    </li>
+  </ul>
+
+  <p class="footnote">
+    Pre-war prices are 27 February 2026 settlements where available,
+    late-February mid-range where not. Crude figures are
+    crude+condensate only; product figures are spot assessments.
+    Methodology detail in the accompanying CSV series (not published).
+  </p>
+
+  <p class="back"><a href="/">&larr; back</a></p>
+
+</body>
+</html>
